@@ -4,9 +4,17 @@ MAINTAINER Peter Mount <peter@retep.org>
 ENV JENKINS_HOME /opt/jenkins
 ENV JENKINS_PORT 80
 
+RUN apk add --update \
+        git \
+        mercurial \
+        subversion &&\
+    rm -rf /var/cache/apk/*
+
 COPY keys/* /etc/ssh.cache/
 
-COPY *.sh /
+COPY scripts/*.sh /
+
+ENTRYPOINT  ["/docker-entrypoint.sh"]
 
 RUN chmod 500 /docker-entrypoint.sh &&\
     chmod -f 600 /etc/ssh.cache/ssh_host_* &&\
@@ -21,20 +29,14 @@ RUN chmod 500 /docker-entrypoint.sh &&\
 	    -G jenkins \
 	    -s /bin/ash \
 	    -D jenkins &&\
-    echo "jenkins:${jenkins.password}" | chpasswd &&\
-    apk add --update \
-        git \
-        mercurial \
-        subversion &&\
-    echo Retrieving jenkins &&\
-    curl -sSL -O ${jenkins.repo}/war/latest/jenkins.war &&\
-    mv jenkins.war /opt &&\
-    mkdir ${JENKINS_HOME} &&\
-    rm -rf /var/cache/apk/*
-
-EXPOSE 22/tcp 80/tcp 443/tcp 50000/tcp
+    echo "jenkins:jenkins" | chpasswd &&\
+    mkdir ${JENKINS_HOME}
 
 VOLUME ${JENKINS_HOME}
 
-ENTRYPOINT  ["/docker-entrypoint.sh"]
+RUN curl -sSL \
+	-o /opt/jenkins.war \
+	http://mirrors.jenkins-ci.org/war/latest/jenkins.war
+
+EXPOSE 22/tcp 80/tcp 443/tcp 50000/tcp
 
