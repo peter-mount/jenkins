@@ -36,7 +36,9 @@ RUN chmod 500 /docker-entrypoint.sh &&\
     curl -s https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o awscli-bundle.zip &&\
     unzip awscli-bundle.zip &&\
     ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws &&\
-    rm -rf awscli*
+    rm -rf awscli* &&\
+    git config --global credential.helper '!/usr/local/bin/aws codecommit credential-helper $@' &&\
+    git config --global credential.useHttpPath true
 
 VOLUME ${JENKINS_HOME}
 
