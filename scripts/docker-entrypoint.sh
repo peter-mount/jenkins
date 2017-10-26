@@ -44,6 +44,6 @@ then
 fi
 
 # Change log format
-OPTS="$OPTS -Djava.util.logging.SimpleFormatter.format="[%1$Tf] %4$s: %2$s - %5$s %6$s%n"
+OPTS="$OPTS -Djava.util.logging.SimpleFormatter.format=\"[%1$Tf] %4$s: %2$s - %5$s %6$s%n\""
 
 exec /opt/jdk/bin/java $JAVA_OPTS -jar /opt/jenkins.war $OPTS
