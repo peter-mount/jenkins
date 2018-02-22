@@ -4,11 +4,10 @@ MAINTAINER Peter Mount <peter@retep.org>
 ENV JENKINS_HOME /opt/jenkins
 ENV JENKINS_PORT 80
 
-RUN apk add --update \
+RUN apk add --no-cache \
         git \
         mercurial \
-        subversion &&\
-    rm -rf /var/cache/apk/*
+        subversion
 
 COPY keys/* /etc/ssh.cache/
 
@@ -42,9 +41,6 @@ RUN chmod 500 /docker-entrypoint.sh &&\
 
 VOLUME ${JENKINS_HOME}
 
-RUN curl -sSL \
-	-o /opt/jenkins.war \
-	http://mirrors.jenkins-ci.org/war/latest/jenkins.war
+COPY jenkins.war /opt/jenkins.war
 
 EXPOSE 22/tcp 80/tcp 443/tcp 50000/tcp
-
