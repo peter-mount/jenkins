@@ -1,5 +1,12 @@
 imageName = 'area51/jenkins'
 
+properties( [
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '10')),
+  disableConcurrentBuilds(),
+  disableResume(),
+  pipelineTriggers([cron('H H * * *')])
+])
+
 node( 'Dev_AMD64_Amsterdam' ) {
   stage( 'Checkout' ) {
     checkout scm
