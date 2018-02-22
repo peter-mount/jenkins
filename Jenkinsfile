@@ -4,7 +4,10 @@ properties( [
   buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '10')),
   disableConcurrentBuilds(),
   disableResume(),
-  pipelineTriggers([cron('H H * * *')])
+  pipelineTriggers([
+    upstream('/Public/Docker-Client/master'),
+    cron('H H * * 1')
+  ])
 ])
 
 node( 'Dev_AMD64_Amsterdam' ) {
