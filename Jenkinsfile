@@ -16,4 +16,8 @@ node( 'Dev_AMD64_Amsterdam' ) {
   stage( 'Build Image' ) {
     sh 'docker build -t ' + imageName + ' .'
   }
+
+  stage( 'Publish Image' ) {
+    sh 'docker push ' + imageName
+  }
 }
