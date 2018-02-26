@@ -20,7 +20,7 @@ node( 'Dev_AMD64_Amsterdam' ) {
   }
 
   stage( 'Retrieve jenkins.war' ) {
-    sh 'curl -sSL -O jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
+    sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
   }
 
   stage( 'Build Image' ) {
