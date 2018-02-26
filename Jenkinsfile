@@ -10,7 +10,7 @@ properties( [
   ])
 ])
 
-node( 'Dev_AMD64_Amsterdam' ) {
+node( 'AMD64' ) {
   stage( 'Checkout' ) {
     checkout scm
   }
