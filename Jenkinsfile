@@ -11,11 +11,8 @@ properties( [
 ])
 
 node( 'AMD64' ) {
-  stage( 'Checkout' ) {
+  stage( 'Prepare' ) {
     checkout scm
-  }
-
-  stage( 'Prepare Build' ) {
     sh 'docker pull area51/docker-client:latest'
   }
 
@@ -23,11 +20,11 @@ node( 'AMD64' ) {
     sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
   }
 
-  stage( 'Build Image' ) {
+  stage( 'Build' ) {
     sh 'docker build -t ' + imageName + ' .'
   }
 
-  stage( 'Publish Image' ) {
+  stage( 'Publish' ) {
     sh 'docker push ' + imageName
   }
 }
