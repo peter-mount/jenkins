@@ -5,7 +5,7 @@ properties( [
   disableConcurrentBuilds(),
   disableResume(),
   pipelineTriggers([
-    upstream('/Public/Docker-Client/master'),
+    upstream('/peter-mount/docker-client/master'),
     cron('H H * * 1')
   ])
 ])
