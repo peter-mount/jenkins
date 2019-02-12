@@ -6,7 +6,7 @@ ENV JENKINS_PORT 80
 
 RUN apk add --no-cache \
         git \
-        pip \
+        py2-pip \
         mercurial \
         subversion
 
