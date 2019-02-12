@@ -6,6 +6,7 @@ ENV JENKINS_PORT 80
 
 RUN apk add --no-cache \
         git \
+        pip \
         mercurial \
         subversion
 
@@ -31,11 +32,9 @@ RUN chmod 500 /docker-entrypoint.sh &&\
     echo "jenkins:jenkins" | chpasswd &&\
     mkdir ${JENKINS_HOME}s &&\
     echo "Installing aws-cli" &&\
-    cd /tmp &&\
-    curl -s https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o awscli-bundle.zip &&\
-    unzip awscli-bundle.zip &&\
-    ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws &&\
-    rm -rf awscli* &&\
+    pip install --upgrade pip &&\
+    pip install awscli --ignore-installed six &&\
+    echo "Configuring git to use aws" &&\
     git config --global credential.helper '!/usr/local/bin/aws codecommit credential-helper $@' &&\
     git config --global credential.useHttpPath true
 
