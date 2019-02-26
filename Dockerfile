@@ -35,7 +35,7 @@ RUN chmod 500 /docker-entrypoint.sh &&\
     pip install --upgrade pip &&\
     pip install awscli --ignore-installed six &&\
     echo "Configuring git to use aws" &&\
-    git config --global credential.helper '!/usr/local/bin/aws codecommit credential-helper $@' &&\
+    git config --global credential.helper '!/usr/bin/aws codecommit credential-helper $@' &&\
     git config --global credential.useHttpPath true
 
 VOLUME ${JENKINS_HOME}
