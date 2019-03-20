@@ -43,4 +43,8 @@ then
     OPTS="$OPTS $JENKINS_OPTS"
 fi
 
+# Disable dns log spam
+# https://stackoverflow.com/questions/31740373/how-can-i-prevent-that-the-jenkins-log-gets-spammed-with-strange-messages
+OPTS="$OPTS -Dhudson.DNSMultiCast.disabled=true -Dhudson.udp=-1"
+
 exec /opt/jdk/bin/java $JAVA_OPTS -jar /opt/jenkins.war $OPTS
