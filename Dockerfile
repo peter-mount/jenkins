@@ -26,7 +26,7 @@ RUN chmod 500 /docker-entrypoint.sh &&\
 	    -G jenkins \
 	    -s /bin/ash \
 	    -D jenkins &&\
-    mkdir ${JENKINS_HOME} &&\
+    mkdir ${JENKINS_HOME}
 
 ENTRYPOINT  ["/docker-entrypoint.sh"]
 
