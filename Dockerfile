@@ -33,6 +33,6 @@ ENTRYPOINT  ["/docker-entrypoint.sh"]
 EXPOSE 80/tcp 443/tcp 50000/tcp
 
 # Final image with just the war
-FROM jdk AS jenkins
+FROM jdk
 
 COPY jenkins.war /opt/jenkins.war
