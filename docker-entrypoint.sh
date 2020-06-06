@@ -1,25 +1,12 @@
 #!/bin/ash
-#
-# Environment variables:
-# MAVEN_MIRROR          The url of a local repository to use instead of maven central
-# MAVEN_PRIVATE_MIRROR  Optional when MAVEN_MIRROR is in use, a secondary mirror
-#
-# JNLP Slave:
-# ===========
-# JENKINS_URL           Url to the Jenkins server
-# JENKINS_SECRET        Secret key
-#
-# SSH Slave:
-# ==========
-# JENKINS_PASSWORD      Optional, the password for the Jenkins user
-#
 
-. /config-jenkins.sh
-. /config-docker.sh
-. /config-maven.sh
-. /config-ssh.sh
-
-/usr/sbin/sshd -D -f /etc/ssh/sshd_config &
+# /opt/jenkins is available for the workspace work files
+jenkinsHome=/opt/jenkins
+if [ ! -d ${jenkinsHome} ]
+then
+    mkdir -p ${jenkinsHome}
+    chown jenkins:jenkins ${jenkinsHome}
+fi
 
 OPTS="--webroot=/opt/war"
 
@@ -42,6 +29,15 @@ if [ -n "$JENKINS_OPTS" ]
 then
     OPTS="$OPTS $JENKINS_OPTS"
 fi
+
+# Write logs to log directory not the console
+logDir=${jenkinsHome}/logs
+if [ ! =d ${logDir} ]
+then
+    mkdir -p ${logDir}
+    chown jenkins:jenkins ${logDir}
+fi
+sed -i "s|@@logDir@@|${logDir}|g" /log.properties
 
 # Disable dns log spam
 # https://stackoverflow.com/questions/31740373/how-can-i-prevent-that-the-jenkins-log-gets-spammed-with-strange-messages
