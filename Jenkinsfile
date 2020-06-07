@@ -134,10 +134,10 @@ def multi = [:]
 
 // Now the agent, this uses it's own Dockerfile as not a jenkins master
 // but a docker slave
-stage( 'Build agent' ) {
+stage( 'Agent' ) {
     parallel buildVersion( 'agent/Dockerfile', 'agent' )
 }
-multi['Jenkins agent'] = { -> multiArch( 'agent' ) }
+multi['Agent'] = { -> multiArch( 'agent' ) }
 
 // Now build each version of jenkins on each architecture
 versions.each( {
