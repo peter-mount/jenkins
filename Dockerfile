@@ -45,7 +45,7 @@ FROM jdk AS war
 ARG version
 COPY log.properties /deploy/
 COPY docker-entrypoint.sh /deploy/
-RUN URL="http://mirrors.jenkins-ci.org/war/${version}/jenkins.war" &&\
+RUN URL=http://mirrors.jenkins-ci.org/war/${version}/jenkins.war &&\
     if [ "${version}" = "lts" ];\
     then\
         URL="http://mirrors.jenkins-ci.org/war-stable/latest/jenkins.war";\
