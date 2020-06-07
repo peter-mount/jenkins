@@ -49,7 +49,7 @@ versions = [ 'latest', "lts", "2.238" ]
 def tag = [:]
 
 // Build a specific image on a specific architecture
-def buildImage = ( dockerfile, arch, version ) -> {
+def buildImage = dockerfile, arch, version -> {
     node( arch ) {
         stage( arch ) {
             checkout scm
@@ -72,8 +72,8 @@ def buildImage = ( dockerfile, arch, version ) -> {
 }
 
 // Returns an object for building a version on all architectures
-def buildVersion = ( dockerfile, version ) -> architectures.reduce(
-        (a, b) -> {
+def buildVersion = dockerfile, version -> architectures.reduce(
+        a, b -> {
             // Ensure we have a copy of the value else closure breaks
             def label = b[0], arch = b[1]
             a[label] = () -> buildImage( dockerfile, arch, version )
@@ -83,13 +83,13 @@ def buildVersion = ( dockerfile, version ) -> architectures.reduce(
     )
 
 // Builds a multiarch image for a specific version
-def multiArch = ( version ) -> {
+def multiArch = version -> {
     node( 'AMD64' ) {
         stage( version ) {
             def multiImage  = repository + imagePrefix + ':' + version
 
             sh architectures.map( a -> a[1] )
-                .reduce( (a,arch) -> {
+                .reduce( a, arch -> {
                     a << repository + imagePrefix + ':' + arch + '-' + version
                     return a
                 },
@@ -133,16 +133,16 @@ stage( 'Multiarch nowar' ) {
     multiArch( 'nowar' )
 }
 
-// Now build each version on each architecture
+// Now build each version on each architecture then multi-arch them at the end
 def multi = [:]
-version.each( version -> {
+version.each( v -> {
+    // Force copy else multiArch closure won't see this value
+    def version = v
     stage( 'Jenkins ' + version ) {
         parallel buildVersion( 'jenkins/Dockerfile', version )
     }
-    multi['Jenkins ' + version] = multiArch( version )
+    multi['Jenkins ' + version] = () -> multiArch( version )
 }
-
-// Now the multi-arch image, run this on one node only
 stage( 'Multiarch Jenkins' ) {
     parallel multi
 }
