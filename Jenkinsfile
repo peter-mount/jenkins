@@ -77,7 +77,7 @@ def buildVersion = {
         a, b -> L:{
             // Ensure we have a copy of the value else closure breaks
             def label = b[0], arch = b[1]
-            a[label] = () -> M:{buildImage( dockerfile, arch, version )}
+            a[label] = { () -> buildImage( dockerfile, arch, version ) }
             return a
         }
     }
