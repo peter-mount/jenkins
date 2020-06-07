@@ -70,12 +70,12 @@ def buildImage = {
                 ].join(' ') )
             }
 
-            shell( [
+            [
                 'docker build',
                 '-f', dockerfile,
                 '-t', tag[arch][version],
                 '--build-arg=version=' + version
-            ].join(' ') )
+            ].join(' ').execute().waitFor()
 
             // Push only if required
             if( repository != '' ) {
