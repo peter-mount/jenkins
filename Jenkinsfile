@@ -132,7 +132,7 @@ stage( 'Multiarch nowar' ) {
 // Now build each version on each architecture then multi-arch them at the end
 
 def multi = [:]
-version.each( {
+versions.each( {
     v -> stage( 'Jenkins ' + v ) {
         // Force copy else multiArch closure won't see this value
         def version = v
