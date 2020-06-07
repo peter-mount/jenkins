@@ -27,8 +27,7 @@ COPY log.properties /
 RUN chmod 500 /docker-entrypoint.sh &&\
     mkdir -p ${JENKINS_HOME} &&\
     addgroup --gid ${gid} jenkins &&\
-    adduser --system \
-            --home ${JENKINS_HOME} \
+    adduser --home ${JENKINS_HOME} \
     	    --uid ${uid} \
 	        --group ${gid} \
 	        --shell /bin/bash \
