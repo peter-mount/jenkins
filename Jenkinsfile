@@ -55,24 +55,26 @@ def tag = architectures.inject( [:] ) {
 
 // Build a specific image on a specific architecture
 def buildImage = {
-    t, dockerfile, arch, version -> node( arch ) {
+    dockerfile, arch, version -> node( arch ) {
         stage( arch ) {
             tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
             echo "Docker image " + tag[arch][version]
-            echo t
 
             checkout scm
 
             // Pull latest nowar image for any other version than itself
             if( version != 'nowar' ) {
-                t.sh [
+                sh [
                     'docker pull',
                     tag[arch]['nowar'],
                     '.'
                 ].join(' ')
             }
 
-            t.sh [
+            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
+
+
+            sh [
                 'docker build',
                 '-f', dockerfile,
                 '-t', tag[arch][version],
@@ -81,7 +83,7 @@ def buildImage = {
 
             // Push only if required
             if( repository != '' ) {
-                t.sh [
+                sh [
                     'docker push',
                      tag[arch][version]
                  ].join(' ')
@@ -92,12 +94,11 @@ def buildImage = {
 
 // Returns an object for building a version on all architectures
 def buildVersion = {
-    t, dockerfile, version -> architectures.inject( [:] ) {
+    dockerfile, version -> architectures.inject( [:] ) {
         a, b -> L:{
-            echo t
             // Ensure we have a copy of the value else closure breaks
             def label = b[0], arch = b[1]
-            a[label] = { -> buildImage( t, dockerfile, arch, version ) }
+            a[label] = { -> buildImage( dockerfile, arch, version ) }
             return a
         }
     }
@@ -147,7 +148,7 @@ def multiArch = {
 // First the nowar image as it's needed for all other builds
 
 stage( 'Build nowar' ) {
-    parallel buildVersion( this, 'common/Dockerfile', 'nowar' )
+    parallel buildVersion( 'common/Dockerfile', 'nowar' )
 }
 /*
 stage( 'Multiarch nowar' ) {
