@@ -22,20 +22,21 @@ repository= 'area51/'
 // image prefix
 imagePrefix = 'jenkins'
 
-// The architectures to build. This is an array of [label,arch]
+// The architectures to build. This is an array of [label,arch, annotation]
 architectures = [
- ['AMD64', 'amd64'],
- ['ARM64', 'arm64v8'],
- ['ARM32v7', 'arm32v7']
+ ['AMD64',      'amd64',    '--os linux --arch amd64'],
+ ['ARM64',      'arm64v8',  '--os linux --arch arm64'],
+ ['ARM32v7',    'arm32v7',  '--os linux --arch arm --variant v7']
 ]
 
 // The jenkins versions to build, always latest and the LTD version & select other versions to allow a
-// rollback if latest breaks for any reason
+// rollback if latest breaks for any reason.
 //
-// nowar    Special case, image only has the jenkins user setup, no war or entry point configured
-// latest   the current latest war
-// lts      the current lts war
-versions = [ 'nowar', 'latest', "lts", "2.238" ]
+// Note: The nowar version is always built first so no need to include it here.
+//
+// latest is always the current latest war, lts the current lts war
+//
+versions = [ 'latest', "lts", "2.238" ]
 
 // ============================
 // Do not edit below this point
@@ -44,105 +45,104 @@ versions = [ 'nowar', 'latest', "lts", "2.238" ]
 // For jenkins instead of using the branch we use an array of supported version
 // numbers so we build a set of images for each version on all architectures
 
-// Final image name
-def tag         =[:],   // tag name keyed by architecture
-    build       = [:],  // build steps keyed by architecture
-    imageTags   = '',   // list of image tags space separated
-    images      = [:]   // map of annotate commands keyed by image name
+// map of image names. Always tag[arch][version]
+def tag = [:]
 
-for( architecture in architectures ) {
-    // Need to bind these before the closure, cannot access these as architecture[x]
-    def nodeId = architecture[0]
-    def arch = architecture[1]
+// Build a specific image on a specific architecture
+def buildImage = ( dockerfile, arch, version ) -> {
+    node( arch ) {
+        stage( arch ) {
+            checkout scm
 
-    // The docker image name for this architecture
-    tag[arch] = [:]
-    for( version in versions ) {
-        tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
-    }
+            tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
 
-    // The build step for the architecture
-    build[arch] = {
-        node( nodeId ) {
-            stage( arch ) {
-                checkout scm
+            // Pull latest nowar image for any other version than itself
+            if( version != 'nowar' ) {
+                sh 'docker pull ' + tag[arch]['nowar']
+            }
 
-                //sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
+            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
 
-                for( version in versions ) {
-                    def cmd = 'docker build -t ' + tag[arch][version]
-                    cmd = cmd + ' --build-arg=version=' + version
-                    if( version == 'nowar' ) {
-                        cmd = cmd + ' --target=jenkins'
-                    } else {
-                        cmd = cmd + ' --target=war'
-                    }
-                    sh cmd + ' .'
-                }
-
-                // Push only if required
-                if( repository != '' ) {
-                    for( version in versions ) {
-                        sh 'docker push ' + tag[arch][version]
-                    }
-                }
+            // Push only if required
+            if( repository != '' ) {
+                sh 'docker push ' + tag[arch][version]
             }
         }
     }
+}
 
-    // The annotation command
-    def cmd = 'docker manifest annotate --os linux '
-    switch( arch ) {
-        case 'arm32v6':
-            cmd = cmd + '--arch arm --variant v6'
-            break
-        case 'arm32v7':
-            cmd = cmd + '--arch arm --variant v7'
-            break
-        case 'arm64v8':
-            cmd = cmd + '--arch arm64'
-        default:
-            cmd = cmd + '--arch ' + arch
-    }
-    images[arch] = [:]
-    for( version in versions ) {
-        def multiImage  = repository + imagePrefix + ':' + version
-        images[arch][version] = cmd + ' ' + multiImage + ' ' + tag[arch][version]
+// Returns an object for building a version on all architectures
+def buildVersion = ( dockerfile, version ) -> architectures.reduce(
+        (a, b) -> {
+            // Ensure we have a copy of the value else closure breaks
+            def label = b[0], arch = b[1]
+            a[label] = () -> buildImage( dockerfile, arch, version )
+            return a
+        },
+        [:]
+    )
+
+// Builds a multiarch image for a specific version
+def multiArch = ( version ) -> {
+    node( 'AMD64' ) {
+        stage( version ) {
+            def multiImage  = repository + imagePrefix + ':' + version
+
+            sh architectures.map( a -> a[1] )
+                .reduce( (a,arch) -> {
+                    a << repository + imagePrefix + ':' + arch + '-' + version
+                    return a
+                },
+                [
+                  'docker manifest create -a',
+                   multiImage
+                ] )
+
+            sh [
+                'docker manifest create -a',
+                 multiImage,
+                 images.join(' ')
+             ].join(' ')
+
+            architectures.each(
+                architecture -> sh [
+                    'docker pull',
+                    tag[architecture[1]][version]
+                ].join(' ')
+            )
+
+            architectures.each(
+                architecture -> sh [
+                    'docker manifest annotate',
+                    architecture[2],
+                    multiImage,
+                    tag[architecture[1]][version]
+                ].join(' ')
+            )
+
+            sh ['docker push',multiImage].join(' ')
+        }
     }
 }
 
-// Now run the builds for all architectures in parallel
-stage( 'Build' ) {
-    parallel build
+// First the nowar image as it's needed for all other builds
+stage( 'Build nowar' ) {
+    parallel buildVersion( 'common/Dockerfile', 'nowar' )
+}
+stage( 'Multiarch nowar' ) {
+    multiArch( 'nowar' )
+}
+
+// Now build each version on each architecture
+def multi = [:]
+version.each( version -> {
+    stage( 'Jenkins ' + version ) {
+        parallel buildVersion( 'jenkins/Dockerfile', version )
+    }
+    multi['Jenkins ' + version] = multiArch( version )
 }
 
 // Now the multi-arch image, run this on one node only
-node( 'AMD64' ) {
-    for( version in versions ) {
-        stage( "Multi-" + version ) {
-            def multiImage  = repository + imagePrefix + ':' + version
-
-            // Create the new image manifest with the child image layers attached
-            def cmds = [ 'docker manifest create -a ' + multiImage ]
-
-            for( architecture in architectures ) {
-                for( image in images[architecture] ) {
-                    // Append image name to manifest create command
-                    cmds[0] = cmds[0] + ' ' + image[0]
-                    // Pull the image
-                    cmds << 'docker pull ' + image[0]
-                    // Annotate it to the correct architecture
-                    cmds << image[1]
-                }
-            }
-
-            // Push the image
-            cmds << 'docker manifest push -p ' + multiImage
-
-            // Run the command sequence
-            for( cmd in cmds ) {
-                sh cmd
-            }
-        }
-    }
+stage( 'Multiarch Jenkins' ) {
+    parallel multi
 }
