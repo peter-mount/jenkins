@@ -6,7 +6,7 @@ MAINTAINER Peter Mount <peter@area51.dev>
 # Add the common source control apps
 RUN apt-get update &&\
     apt-get install -y --no-install-recommends \
-            curl
+            curl \
             git \
             mercurial \
             subversion &&\
