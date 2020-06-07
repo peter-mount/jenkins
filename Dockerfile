@@ -45,12 +45,8 @@ FROM jdk AS war
 ARG version
 COPY log.properties /deploy/
 COPY docker-entrypoint.sh /deploy/
-RUN URL=http://mirrors.jenkins-ci.org/war/${version}/jenkins.war &&\
-    if [ "${version}" = "lts" ];\
-    then\
-        URL="http://mirrors.jenkins-ci.org/war-stable/latest/jenkins.war";\
-    fi &&\
-    curl -sSl -p /deploy/jenkins.war "${URL}" &&\
+COPY retrieve-jenkins.sh /bin/
+RUN retrieve-jenkins.sh ${version} /deploy/jenkins.war &&\
     find /deploy -type f -exec chmod 644 {} \; &&\
     chmod 500 /deploy/docker-entrypoint.sh \;
 
