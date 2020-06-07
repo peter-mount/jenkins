@@ -112,7 +112,7 @@ def multiArch = {
             } )
 
             architectures.each( {
-                architecture -> sh 'docker manifest annotate ' architecture[2] + ' ' + multiImage + ' ' + tag[architecture[1]][version]
+                architecture -> sh 'docker manifest annotate ' + architecture[2] + ' ' + multiImage + ' ' + tag[architecture[1]][version]
             } )
 
             sh 'docker push ' + multiImage
