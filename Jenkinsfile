@@ -63,14 +63,26 @@ def buildImage = {
 
             // Pull latest nowar image for any other version than itself
             if( version != 'nowar' ) {
-                sh [ 'docker pull', tag[arch]['nowar'], '.' ].join(' ')
+                shell( [
+                    'docker pull',
+                    tag[arch]['nowar'],
+                    '.'
+                ].join(' ') )
             }
 
-            sh ['docker build', '-f', dockerfile, '-t', tag[arch][version], '--build-arg=version=' + version ].join(' ')
+            shell( [
+                'docker build',
+                '-f', dockerfile,
+                '-t', tag[arch][version],
+                '--build-arg=version=' + version
+            ].join(' ') )
 
             // Push only if required
             if( repository != '' ) {
-                sh [ 'docker push', tag[arch][version] ].join(' ')
+                shell( [
+                    'docker push',
+                     tag[arch][version]
+                 ].join(' ') )
             }
         }
     }
@@ -103,28 +115,28 @@ def multiArch = {
                     return a
                 }
             }
-            sh manifest.join(' ')
+            shell( manifest.join(' ') )
 
             architectures.each( {
-                architecture -> sh [
+                architecture -> shell( [
                     'docker pull',
                     tag[architecture[1]][version]
-                ].join(' ')
+                ].join(' ') )
             } )
 
             architectures.each( {
-                architecture -> sh [
+                architecture -> shell( [
                     'docker manifest annotate',
                     architecture[2],
                     multiImage,
                     tag[architecture[1]][version]
-                ].join(' ')
+                ].join(' ') )
             } )
 
-            sh [
+            shell( [
                 'docker push',
                 multiImage
-            ].join(' ')
+            ].join(' ') )
         }
     }
 }
