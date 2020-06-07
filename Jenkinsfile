@@ -59,6 +59,7 @@ def buildImage = {
         stage( arch ) {
             tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
             echo "Docker image " + tag[arch][version]
+            echo t
 
             checkout scm
 
@@ -93,6 +94,7 @@ def buildImage = {
 def buildVersion = {
     t, dockerfile, version -> architectures.inject( [:] ) {
         a, b -> L:{
+            echo t
             // Ensure we have a copy of the value else closure breaks
             def label = b[0], arch = b[1]
             a[label] = { -> buildImage( t, dockerfile, arch, version ) }
