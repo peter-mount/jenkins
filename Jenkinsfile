@@ -108,14 +108,13 @@ def multiArch = {
             sh manifest.join(' ')
 
             architectures.each( {
-                architecture -> sh 'docker pull ' + tag[architecture[1]][version]
+                architecture -> L:{
+                    sh 'docker pull ' + tag[architecture[1]][version]
+                    sh 'docker manifest annotate ' + architecture[2] + ' ' + multiImage + ' ' + tag[architecture[1]][version]
+                }
             } )
 
-            architectures.each( {
-                architecture -> sh 'docker manifest annotate ' + architecture[2] + ' ' + multiImage + ' ' + tag[architecture[1]][version]
-            } )
-
-            sh 'docker push ' + multiImage
+            sh 'docker manifest push -p ' + multiImage
         }
     }
 }
