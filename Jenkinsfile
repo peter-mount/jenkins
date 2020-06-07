@@ -76,7 +76,7 @@ for( architecture in architectures ) {
                 //sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
 
                 // Build up to the jenkins build stage as this is common to all versions
-                sh 'docker build -t ' + tag[arch] + ' --target jenkins .'
+                sh 'docker build -t ' + tag[arch][version] + ' --target jenkins .'
 
                 for( version in versions ) {
                     def cmd = 'docker build -t ' + tag[arch][version]
@@ -115,6 +115,7 @@ for( architecture in architectures ) {
     }
     images[arch] = [:]
     for( version in versions ) {
+        def multiImage  = repository + imagePrefix + ':' + version
         images[arch][version] = cmd + ' ' + multiImage + ' ' + tag[arch][version]
     }
 }
