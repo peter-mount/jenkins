@@ -22,7 +22,7 @@ repository= 'area51/'
 // image prefix
 imagePrefix = 'jenkins'
 
-// The architectures to build. This is an array of [node,arch]
+// The architectures to build. This is an array of [label,arch]
 architectures = [
  ['AMD64', 'amd64'],
  ['ARM64', 'arm64v8'],
@@ -56,7 +56,7 @@ for( architecture in architectures ) {
     def arch = architecture[1]
 
     // The docker image name for this architecture
-    tag[architecture] = [:]
+    tag[arch] = [:]
     for( version in versions ) {
         tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
     }
