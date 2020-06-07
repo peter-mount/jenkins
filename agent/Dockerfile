@@ -1,6 +1,6 @@
 # A docker slave based on docker-inbound-agent
 FROM area51/jenkins:nowar AS agent
-ARG VERSION=4.0.1
+ARG VERSION=4.3
 
 USER root
 RUN apt-get update &&\
