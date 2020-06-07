@@ -59,7 +59,7 @@ for( architecture in architectures ) {
     def arch = architecture[1]
 
     // The docker image name for this architecture
-    tag[arch] = [:]
+    tag[architecture] = [:]
     for( version in versions ) {
         tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
     }
@@ -74,9 +74,6 @@ for( architecture in architectures ) {
                 checkout scm
 
                 //sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
-
-                // Build up to the jenkins build stage as this is common to all versions
-                sh 'docker build -t ' + tag[arch][version] + ' --target jenkins .'
 
                 for( version in versions ) {
                     def cmd = 'docker build -t ' + tag[arch][version]
