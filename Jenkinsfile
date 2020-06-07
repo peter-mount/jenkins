@@ -51,6 +51,7 @@ def tag = architectures.inject( [:] ) {
         a[b[1]] = [:]
         return a
     }
+}
 
 // Build a specific image on a specific architecture
 def buildImage = {
