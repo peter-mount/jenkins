@@ -63,19 +63,12 @@ def buildImage = {
             checkout scm
 
             // Pull latest nowar image for any other version than itself
-            if( version != 'nowar' ) {
+            if( version == 'nowar' ) {
+                sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' .'
+            } else {
                 sh 'docker pull ' +tag[arch]['nowar']
+                sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version + ' .'
             }
-
-            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version + ' .'
-
-            sh [
-                'docker build',
-                '-f', dockerfile,
-                '-t', tag[arch][version],
-                '--build-arg=version=' + version,
-                '.'
-            ].join(' ')
 
             // Push only if required
             if( repository != '' ) {
@@ -115,25 +108,14 @@ def multiArch = {
             sh manifest.join(' ')
 
             architectures.each( {
-                architecture -> sh [
-                    'docker pull',
-                    tag[architecture[1]][version]
-                ].join(' ')
+                architecture -> sh 'docker pull ' + tag[architecture[1]][version]
             } )
 
             architectures.each( {
-                architecture -> sh [
-                    'docker manifest annotate',
-                    architecture[2],
-                    multiImage,
-                    tag[architecture[1]][version]
-                ].join(' ')
+                architecture -> sh 'docker manifest annotate ' architecture[2] + ' ' + multiImage + ' ' + tag[architecture[1]][version]
             } )
 
-            sh [
-                'docker push',
-                multiImage
-            ].join(' ')
+            sh 'docker push ' + multiImage
         }
     }
 }
@@ -143,7 +125,7 @@ def multiArch = {
 stage( 'Build nowar' ) {
     parallel buildVersion( 'common/Dockerfile', 'nowar' )
 }
-/*
+
 stage( 'Multiarch nowar' ) {
     multiArch( 'nowar' )
 }
@@ -163,4 +145,3 @@ version.each( {
 stage( 'Multiarch Jenkins' ) {
     parallel multi
 }
-*/
