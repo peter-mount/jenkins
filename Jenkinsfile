@@ -73,16 +73,14 @@ def buildImage = {
 
 // Returns an object for building a version on all architectures
 def buildVersion = {
-    dockerfile, version -> architectures.inject(
-        [:],
+    dockerfile, version -> architectures.inject( [:] ) {
         a, b -> {
             // Ensure we have a copy of the value else closure breaks
             def label = b[0], arch = b[1]
             a[label] = () -> buildImage( dockerfile, arch, version )
             return a
-        },
-        [:]
-    )
+        }
+    }
 }
 
 // Builds a multiarch image for a specific version
@@ -92,16 +90,12 @@ def multiArch = {
             def multiImage  = repository + imagePrefix + ':' + version
 
             sh architectures.map( a -> a[1] )
-                .inject(
-                    [
-                        'docker manifest create -a',
-                        multiImage
-                    ],
+                .inject( ['docker manifest create -a', multiImage] ) {
                     a, arch -> {
                         a << repository + imagePrefix + ':' + arch + '-' + version
                         return a
-                    },
-                 )
+                    }
+                }
 
             sh [
                 'docker manifest create -a',
