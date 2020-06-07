@@ -1,18 +1,18 @@
 
 properties( [
-  buildDiscarder(
-    logRotator(
-      artifactDaysToKeepStr: '',
-      artifactNumToKeepStr: '',
-      daysToKeepStr: '7',
-      numToKeepStr: '10'
-    )
-  ),
-  disableConcurrentBuilds(),
-  disableResume(),
-  pipelineTriggers([
-    cron('H H * * 1')
-  ])
+    buildDiscarder(
+        logRotator(
+            artifactDaysToKeepStr: '',
+            artifactNumToKeepStr: '',
+            daysToKeepStr: '7',
+            numToKeepStr: '10'
+        )
+    ),
+    disableConcurrentBuilds(),
+    disableResume(),
+    pipelineTriggers([
+        cron('H H * * 1')
+    ])
 ])
 
 // Repository name use, must end with / or be '' for none.
@@ -24,9 +24,9 @@ imagePrefix = 'jenkins'
 
 // The architectures to build. This is an array of [label,arch, annotation]
 architectures = [
- ['AMD64',      'amd64',    '--os linux --arch amd64'],
- ['ARM64',      'arm64v8',  '--os linux --arch arm64'],
- ['ARM32v7',    'arm32v7',  '--os linux --arch arm --variant v7']
+    ['AMD64',      'amd64',    '--os linux --arch amd64'],
+    ['ARM64',      'arm64v8',  '--os linux --arch arm64'],
+    ['ARM32v7',    'arm32v7',  '--os linux --arch arm --variant v7']
 ]
 
 // The jenkins versions to build, always latest and the LTD version & select other versions to allow a
@@ -50,24 +50,22 @@ def tag = [:]
 
 // Build a specific image on a specific architecture
 def buildImage = {
-    dockerfile, arch, version -> {
-        node( arch ) {
-            stage( arch ) {
-                checkout scm
+    dockerfile, arch, version -> node( arch ) {
+        stage( arch ) {
+            checkout scm
 
-                tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
+            tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
 
-                // Pull latest nowar image for any other version than itself
-                if( version != 'nowar' ) {
-                    sh 'docker pull ' + tag[arch]['nowar']
-                }
+            // Pull latest nowar image for any other version than itself
+            if( version != 'nowar' ) {
+                sh 'docker pull ' + tag[arch]['nowar']
+            }
 
-                sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
+            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
 
-                // Push only if required
-                if( repository != '' ) {
-                    sh 'docker push ' + tag[arch][version]
-                }
+            // Push only if required
+            if( repository != '' ) {
+                sh 'docker push ' + tag[arch][version]
             }
         }
     }
@@ -88,45 +86,43 @@ def buildVersion = {
 
 // Builds a multiarch image for a specific version
 def multiArch = {
-    version -> {
-        node( 'AMD64' ) {
-            stage( version ) {
-                def multiImage  = repository + imagePrefix + ':' + version
+    version -> node( 'AMD64' ) {
+        stage( version ) {
+            def multiImage  = repository + imagePrefix + ':' + version
 
-                sh architectures.map( a -> a[1] )
-                    .reduce( a, arch -> {
-                        a << repository + imagePrefix + ':' + arch + '-' + version
-                        return a
-                    },
-                    [
-                      'docker manifest create -a',
-                       multiImage
-                    ] )
+            sh architectures.map( a -> a[1] )
+                .reduce( a, arch -> {
+                    a << repository + imagePrefix + ':' + arch + '-' + version
+                    return a
+                },
+                [
+                  'docker manifest create -a',
+                   multiImage
+                ] )
 
-                sh [
-                    'docker manifest create -a',
-                     multiImage,
-                     images.join(' ')
-                 ].join(' ')
+            sh [
+                'docker manifest create -a',
+                 multiImage,
+                 images.join(' ')
+             ].join(' ')
 
-                architectures.each(
-                    architecture -> sh [
-                        'docker pull',
-                        tag[architecture[1]][version]
-                    ].join(' ')
-                )
+            architectures.each(
+                architecture -> sh [
+                    'docker pull',
+                    tag[architecture[1]][version]
+                ].join(' ')
+            )
 
-                architectures.each(
-                    architecture -> sh [
-                        'docker manifest annotate',
-                        architecture[2],
-                        multiImage,
-                        tag[architecture[1]][version]
-                    ].join(' ')
-                )
+            architectures.each(
+                architecture -> sh [
+                    'docker manifest annotate',
+                    architecture[2],
+                    multiImage,
+                    tag[architecture[1]][version]
+                ].join(' ')
+            )
 
-                sh ['docker push',multiImage].join(' ')
-            }
+            sh ['docker push',multiImage].join(' ')
         }
     }
 }
