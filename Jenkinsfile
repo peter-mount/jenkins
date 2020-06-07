@@ -57,12 +57,15 @@ def tag = architectures.inject( [:] ) {
 def buildImage = {
     dockerfile, arch, version -> node( arch ) {
         stage( arch ) {
+            echo "checkout"
             checkout scm
 
+            echo "tag"
             tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
 
             // Pull latest nowar image for any other version than itself
             if( version != 'nowar' ) {
+                echo "pull nowar"
                 sh [
                     'docker pull',
                     tag[arch]['nowar'],
@@ -70,6 +73,7 @@ def buildImage = {
                 ].join(' ')
             }
 
+            echo "build"
             sh [
                 'docker build',
                 '-f', dockerfile,
