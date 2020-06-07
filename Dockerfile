@@ -22,19 +22,24 @@ COPY docker-entrypoint.sh /
 COPY log.properties /
 
 RUN chmod 500 /docker-entrypoint.sh &&\
-    addgroup -g 1000 jenkins &&\
-    adduser -h /home/jenkins \
-    	    -u 1000 \
-	    -G jenkins \
-	    -s /bin/ash \
-	    -D jenkins &&\
-    mkdir ${JENKINS_HOME}
+    mkdir ${JENKINS_HOME} &&\
+    addgroup --gid 1000 jenkins &&\
+    adduser --system \
+            --home ${JENKINS_HOME} \
+    	    --uid 1000 \
+	        --group1000 \
+	        --shell /bin/bash \
+	        --disabled-login
+
+# Now run as the jenkins user
+USER jenkins
 
 ENTRYPOINT  ["/docker-entrypoint.sh"]
 
-EXPOSE 80/tcp 443/tcp 50000/tcp
-
-# Final image with just the war
-FROM jdk
+# Final image with just the war added to /opt
+# Having this as a separate build step will allow us to generate versioned
+# builds with the same base image & just 1 layer being different - i.e.
+# older known-good jenkins versions with just the JDK updated
+FROM jenkins
 
 COPY jenkins.war /opt/jenkins.war
