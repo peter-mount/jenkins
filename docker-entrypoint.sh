@@ -2,6 +2,7 @@
 
 # /opt/jenkins is available for the workspace work files
 jenkinsHome=/opt/jenkins
+jenkinsDeploy=/opt/jenkins-deploy
 if [ ! -d ${jenkinsHome} ]
 then
     mkdir -p ${jenkinsHome}
@@ -37,11 +38,11 @@ then
     mkdir -p ${logDir}
     chown jenkins:jenkins ${logDir}
 fi
-sed -i "s|@@logDir@@|${logDir}|g" /opt/log.properties
-JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=/opt/log.properties"
+sed -i "s|@@logDir@@|${logDir}|g" ${jenkinsDeploy}/log.properties
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=${jenkinsDeploy}/log.properties"
 
 # Disable dns log spam
 # https://stackoverflow.com/questions/31740373/how-can-i-prevent-that-the-jenkins-log-gets-spammed-with-strange-messages
 JAVA_OPTS="$JAVA_OPTS -Dhudson.DNSMultiCast.disabled=true -Dhudson.udp=-1"
 
-exec java $JAVA_OPTS -jar /opt/jenkins.war $OPTS
+exec java $JAVA_OPTS -jar ${jenkinsDeploy}/jenkins.war $OPTS
