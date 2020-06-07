@@ -1,7 +1,7 @@
 # Docker file common to all of our Jenkins containers.
 # This is the nowar version which contains the JDK, base utilities & the jenkins user
 
-FROM adoptopenjdk/openjdk8:debian-slim AS jdk
+FROM adoptopenjdk/openjdk11:debian-slim AS jdk
 MAINTAINER Peter Mount <peter@area51.dev>
 
 # Add the common source control apps
