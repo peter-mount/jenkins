@@ -22,14 +22,15 @@ COPY docker-entrypoint.sh /
 COPY log.properties /
 
 RUN chmod 500 /docker-entrypoint.sh &&\
-    mkdir ${JENKINS_HOME} &&\
+    mkdir -p ${JENKINS_HOME} &&\
     addgroup --gid 1000 jenkins &&\
     adduser --system \
             --home ${JENKINS_HOME} \
     	    --uid 1000 \
 	        --group 1000 \
 	        --shell /bin/bash \
-	        --disabled-login
+	        --disabled-login \
+	        jenkins
 
 # Now run as the jenkins user
 USER jenkins
