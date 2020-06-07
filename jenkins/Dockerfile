@@ -17,5 +17,5 @@ RUN retrieve-jenkins.sh ${version} /deploy/jenkins.war &&\
 # builds with the same base image & just 1 layer being different - i.e.
 # older known-good jenkins versions with just the JDK updated
 FROM area51/jenkins:nowar
-COPY FROM war /deploy/ /opt/
+COPY --from=war /deploy/ /opt/
 ENTRYPOINT  ["/opt/docker-entrypoint.sh"]
