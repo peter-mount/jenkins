@@ -6,13 +6,16 @@ MAINTAINER Peter Mount <peter@area51.dev>
 # Add the common source control apps
 RUN apt-get update &&\
     apt-get install -y --no-install-recommends \
-        git \
-        mercurial \
-        subversion &&\
+            curl
+            git \
+            mercurial \
+            subversion &&\
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Now add the jenkins user & startup script
 FROM jdk AS jenkins
+ARG gid=1000
+ARG uid=1000
 
 ENV JENKINS_HOME /opt/jenkins
 ENV JENKINS_PORT 80
@@ -23,11 +26,11 @@ COPY log.properties /
 
 RUN chmod 500 /docker-entrypoint.sh &&\
     mkdir -p ${JENKINS_HOME} &&\
-    addgroup --gid 1000 jenkins &&\
+    addgroup --gid ${gid} jenkins &&\
     adduser --system \
             --home ${JENKINS_HOME} \
-    	    --uid 1000 \
-	        --group 1000 \
+    	    --uid ${uid} \
+	        --group ${gid} \
 	        --shell /bin/bash \
 	        --disabled-login \
 	        jenkins
