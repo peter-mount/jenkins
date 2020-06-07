@@ -89,10 +89,9 @@ def multiArch = {
         stage( version ) {
             def multiImage  = repository + imagePrefix + ':' + version
 
-            sh architectures.map( a -> a[1] )
-                .inject( ['docker manifest create -a', multiImage] ) {
+            sh architectures.inject( ['docker manifest create -a', multiImage] ) {
                     a, arch -> L:{
-                        a << repository + imagePrefix + ':' + arch + '-' + version
+                        a << repository + imagePrefix + ':' + arch[1] + '-' + version
                         return a
                     }
                 }
