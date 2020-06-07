@@ -5,10 +5,10 @@
 FROM area51/jenkins:nowar AS war
 ARG version
 USER root
-COPY log.properties /deploy/
-COPY docker-entrypoint.sh /deploy/
+COPY log.properties /deploy/jenkins-deploy/
+COPY docker-entrypoint.sh /deploy/jenkins-deploy/
 COPY retrieve-jenkins.sh /bin/
-RUN retrieve-jenkins.sh ${version} /deploy/jenkins.war &&\
+RUN retrieve-jenkins.sh ${version} /deploy/jenkins-deploy/jenkins.war &&\
     chown -R jenkins:jenkins /deploy &&\
     find /deploy -type f -exec chmod 644 {} \; &&\
     chmod 555 /deploy/docker-entrypoint.sh
@@ -18,5 +18,5 @@ RUN retrieve-jenkins.sh ${version} /deploy/jenkins.war &&\
 # builds with the same base image & just 1 layer being different - i.e.
 # older known-good jenkins versions with just the JDK updated
 FROM area51/jenkins:nowar
-COPY --from=war /deploy/ /opt/jenkins-deploy/
+COPY --from=war /deploy/ /opt/
 ENTRYPOINT  ["/opt/jenkins-deploy/docker-entrypoint.sh"]
