@@ -1,0 +1,47 @@
+# Systemd service descriptor for running Jenkins in docker
+# Place this file at /etc/systemd/system/jenkins.service
+#
+# You can then use "systemctl start jenkins" or "systemctl stop jenkins" to start/stop the service.
+#
+# Run "systemctl enable jenkins" to allow jenkins to start when the server starts.
+#
+# The values in here are what I'm using on a Raspberry PI 4B 8Gb running Ubuntu 20.04 64 bit:
+#
+# Set the Environment=IMAGE= line to the image to use,
+# the value here is for the current latest image.
+#
+# Set the -v line to point to a local directory to hold the
+# jenkins configuration:
+# -v /path/to/directory:/opt/jenkins
+#
+# --env JENKINS_PORT=7080 defines the port for http, 7080 in
+# this instance.
+#
+# --net=host means the container is on the server's host network
+# and not on the docker container bridge network.
+#
+[Unit]
+Description=Jenkins
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+User=jenkins
+TimeoutStartSec=0
+Restart=always
+LimitNOFILE=32767
+LimitNPROC=32767
+Environment=IMAGE=area51/jenkins:latest
+ExecStartPre=-/usr/bin/docker pull ${IMAGE}
+ExecStartPre=-/usr/bin/docker stop %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStart=/usr/bin/docker run \
+  --name %n \
+  --net=host \
+  -v /opt/jenkins:/opt/jenkins \
+  --env JENKINS_PORT=7080 \
+  ${IMAGE}
+ExecStop=/usr/bin/docker stop %n
+
+[Install]
+WantedBy=multi-user.target
