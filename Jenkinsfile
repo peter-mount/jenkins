@@ -64,29 +64,22 @@ def buildImage = {
 
             // Pull latest nowar image for any other version than itself
             if( version != 'nowar' ) {
-                sh [
-                    'docker pull',
-                    tag[arch]['nowar'],
-                    '.'
-                ].join(' ')
+                sh 'docker pull ' +tag[arch]['nowar']
             }
 
-            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
-
+            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version + ' .'
 
             sh [
                 'docker build',
                 '-f', dockerfile,
                 '-t', tag[arch][version],
-                '--build-arg=version=' + version
+                '--build-arg=version=' + version,
+                '.'
             ].join(' ')
 
             // Push only if required
             if( repository != '' ) {
-                sh [
-                    'docker push',
-                     tag[arch][version]
-                 ].join(' ')
+                sh 'docker push ' + tag[arch][version]
             }
         }
     }
