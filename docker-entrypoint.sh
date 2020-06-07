@@ -3,13 +3,10 @@
 # /opt/jenkins is available for the workspace work files
 jenkinsHome=/opt/jenkins
 jenkinsDeploy=/opt/jenkins-deploy
-if [ ! -d ${jenkinsHome} ]
-then
-    mkdir -p ${jenkinsHome}
-    chown jenkins:jenkins ${jenkinsHome}
-fi
+jenkinsWar=${jenkinsDeploy}/war
 
-OPTS="--webroot=/opt/war"
+mkdir -p ${jenkinsHome} ${jenkinsWar}
+OPTS="--webroot=${jenkinsWar}"
 
 if [ -n "$JENKINS_PREFIX" ]
 then
