@@ -1,4 +1,4 @@
-#!/bin/ash
+#!/bin/bash
 
 # /opt/jenkins is available for the workspace work files
 jenkinsHome=/opt/jenkins
