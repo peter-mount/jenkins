@@ -121,35 +121,33 @@ def multiArch = {
 }
 
 // First the nowar image as it's needed for all other builds
-stage( 'Build nowar' ) {
+stage( 'nowar' ) {
     parallel buildVersion( 'common/Dockerfile', 'nowar' )
 }
 // This is the only image that we must multiArch now
-stage( 'Multiarch nowar' ) {
-    multiArch( 'nowar' )
-}
+multiArch( 'nowar' )
 
 // Holds the multiArch images to build at the end
 def multi = [:]
 
 // Now the agent, this uses it's own Dockerfile as not a jenkins master
 // but a docker slave
-stage( 'Agent' ) {
+stage( 'agent' ) {
     parallel buildVersion( 'agent/Dockerfile', 'agent' )
 }
-multi['Agent'] = { -> multiArch( 'agent' ) }
+multi['agent'] = { -> multiArch( 'agent' ) }
 
 // Now build each version of jenkins on each architecture
 versions.each( {
-    v -> stage( 'Jenkins ' + v ) {
+    v -> stage( v ) {
         // Force copy else multiArch closure won't see this value
         def version = v
-        multi['Jenkins ' + version] = { -> multiArch( version ) }
+        multi[version] = { -> multiArch( version ) }
         parallel buildVersion( 'jenkins/Dockerfile', version )
     }
 } )
 
 // Finally build the multiarch images
-stage( 'Multiarch Jenkins' ) {
+stage( 'multiArch' ) {
     parallel multi
 }
