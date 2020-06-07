@@ -49,78 +49,84 @@ versions = [ 'latest', "lts", "2.238" ]
 def tag = [:]
 
 // Build a specific image on a specific architecture
-def buildImage = dockerfile, arch, version -> {
-    node( arch ) {
-        stage( arch ) {
-            checkout scm
+def buildImage = {
+    dockerfile, arch, version -> {
+        node( arch ) {
+            stage( arch ) {
+                checkout scm
 
-            tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
+                tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
 
-            // Pull latest nowar image for any other version than itself
-            if( version != 'nowar' ) {
-                sh 'docker pull ' + tag[arch]['nowar']
-            }
+                // Pull latest nowar image for any other version than itself
+                if( version != 'nowar' ) {
+                    sh 'docker pull ' + tag[arch]['nowar']
+                }
 
-            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
+                sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
 
-            // Push only if required
-            if( repository != '' ) {
-                sh 'docker push ' + tag[arch][version]
+                // Push only if required
+                if( repository != '' ) {
+                    sh 'docker push ' + tag[arch][version]
+                }
             }
         }
     }
 }
 
 // Returns an object for building a version on all architectures
-def buildVersion = dockerfile, version -> architectures.reduce(
-        a, b -> {
-            // Ensure we have a copy of the value else closure breaks
-            def label = b[0], arch = b[1]
-            a[label] = () -> buildImage( dockerfile, arch, version )
-            return a
-        },
-        [:]
-    )
+def buildVersion = {
+    dockerfile, version -> architectures.reduce(
+            a, b -> {
+                // Ensure we have a copy of the value else closure breaks
+                def label = b[0], arch = b[1]
+                a[label] = () -> buildImage( dockerfile, arch, version )
+                return a
+            },
+            [:]
+        )
+}
 
 // Builds a multiarch image for a specific version
-def multiArch = version -> {
-    node( 'AMD64' ) {
-        stage( version ) {
-            def multiImage  = repository + imagePrefix + ':' + version
+def multiArch = {
+    version -> {
+        node( 'AMD64' ) {
+            stage( version ) {
+                def multiImage  = repository + imagePrefix + ':' + version
 
-            sh architectures.map( a -> a[1] )
-                .reduce( a, arch -> {
-                    a << repository + imagePrefix + ':' + arch + '-' + version
-                    return a
-                },
-                [
-                  'docker manifest create -a',
-                   multiImage
-                ] )
+                sh architectures.map( a -> a[1] )
+                    .reduce( a, arch -> {
+                        a << repository + imagePrefix + ':' + arch + '-' + version
+                        return a
+                    },
+                    [
+                      'docker manifest create -a',
+                       multiImage
+                    ] )
 
-            sh [
-                'docker manifest create -a',
-                 multiImage,
-                 images.join(' ')
-             ].join(' ')
+                sh [
+                    'docker manifest create -a',
+                     multiImage,
+                     images.join(' ')
+                 ].join(' ')
 
-            architectures.each(
-                architecture -> sh [
-                    'docker pull',
-                    tag[architecture[1]][version]
-                ].join(' ')
-            )
+                architectures.each(
+                    architecture -> sh [
+                        'docker pull',
+                        tag[architecture[1]][version]
+                    ].join(' ')
+                )
 
-            architectures.each(
-                architecture -> sh [
-                    'docker manifest annotate',
-                    architecture[2],
-                    multiImage,
-                    tag[architecture[1]][version]
-                ].join(' ')
-            )
+                architectures.each(
+                    architecture -> sh [
+                        'docker manifest annotate',
+                        architecture[2],
+                        multiImage,
+                        tag[architecture[1]][version]
+                    ].join(' ')
+                )
 
-            sh ['docker push',multiImage].join(' ')
+                sh ['docker push',multiImage].join(' ')
+            }
         }
     }
 }
