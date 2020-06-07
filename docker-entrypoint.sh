@@ -32,12 +32,13 @@ fi
 
 # Write logs to log directory not the console
 logDir=${jenkinsHome}/logs
-if [ ! =d ${logDir} ]
+if [ ! -d ${logDir} ]
 then
     mkdir -p ${logDir}
     chown jenkins:jenkins ${logDir}
 fi
-sed -i "s|@@logDir@@|${logDir}|g" /log.properties
+sed -i "s|@@logDir@@|${logDir}|g" /opt/log.properties
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=/opt/log.properties"
 
 # Disable dns log spam
 # https://stackoverflow.com/questions/31740373/how-can-i-prevent-that-the-jenkins-log-gets-spammed-with-strange-messages
