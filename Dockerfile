@@ -27,7 +27,7 @@ RUN chmod 500 /docker-entrypoint.sh &&\
     adduser --system \
             --home ${JENKINS_HOME} \
     	    --uid 1000 \
-	        --group1000 \
+	        --group 1000 \
 	        --shell /bin/bash \
 	        --disabled-login
 
