@@ -43,4 +43,4 @@ sed -i "s|@@logDir@@|${logDir}|g" /log.properties
 # https://stackoverflow.com/questions/31740373/how-can-i-prevent-that-the-jenkins-log-gets-spammed-with-strange-messages
 JAVA_OPTS="$JAVA_OPTS -Dhudson.DNSMultiCast.disabled=true -Dhudson.udp=-1"
 
-exec /opt/jdk/bin/java $JAVA_OPTS -jar /opt/jenkins.war $OPTS
+exec java $JAVA_OPTS -jar /opt/jenkins.war $OPTS
