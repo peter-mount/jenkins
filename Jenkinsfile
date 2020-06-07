@@ -137,13 +137,11 @@ stage( 'Multiarch nowar' ) {
 
 def multi = [:]
 version.each( {
-    v -> {
+    v -> stage( 'Jenkins ' + v ) {
         // Force copy else multiArch closure won't see this value
         def version = v
-        stage( 'Jenkins ' + version ) {
-            parallel buildVersion( 'jenkins/Dockerfile', version )
-        }
         multi['Jenkins ' + version] = { -> multiArch( version ) }
+        parallel buildVersion( 'jenkins/Dockerfile', version )
     }
 } )
 
