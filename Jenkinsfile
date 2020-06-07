@@ -63,14 +63,26 @@ def buildImage = {
 
             // Pull latest nowar image for any other version than itself
             if( version != 'nowar' ) {
-                sh 'docker pull ' + tag[arch]['nowar']
+                sh [
+                    'docker pull',
+                    tag[arch]['nowar'],
+                    '.'
+                ].join(' ')
             }
 
-            sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version
+            sh [
+                'docker build',
+                '-f', dockerfile,
+                '-t', tag[arch][version],
+                '--build-arg=version=' + version
+            ].join(' ')
 
             // Push only if required
             if( repository != '' ) {
-                sh 'docker push ' + tag[arch][version]
+                sh [
+                    'docker push',
+                     tag[arch][version]
+                 ].join(' ')
             }
         }
     }
@@ -94,18 +106,16 @@ def multiArch = {
         stage( version ) {
             def multiImage  = repository + imagePrefix + ':' + version
 
-            sh architectures.inject( ['docker manifest create -a', multiImage] ) {
-                    a, arch -> L:{
-                        a << repository + imagePrefix + ':' + arch[1] + '-' + version
-                        return a
-                    }
+            def manifest = architectures.inject( [
+                'docker manifest create',
+                '-a', multiImage
+            ] ) {
+                a, arch -> L:{
+                    a << repository + imagePrefix + ':' + arch[1] + '-' + version
+                    return a
                 }
-
-            sh [
-                'docker manifest create -a',
-                 multiImage,
-                 images.join(' ')
-             ].join(' ')
+            }
+            sh manifest.join(' ')
 
             architectures.each( {
                 architecture -> sh [
@@ -123,7 +133,10 @@ def multiArch = {
                 ].join(' ')
             } )
 
-            sh ['docker push',multiImage].join(' ')
+            sh [
+                'docker push',
+                multiImage
+            ].join(' ')
         }
     }
 }
