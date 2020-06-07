@@ -41,9 +41,6 @@ versions = [ 'nowar', 'latest', "lts", "2.238" ]
 // Do not edit below this point
 // ============================
 
-// The image tag (i.e. repository/image but no version)
-imageTag=repository + imagePrefix
-
 // For jenkins instead of using the branch we use an array of supported version
 // numbers so we build a set of images for each version on all architectures
 
@@ -63,9 +60,6 @@ for( architecture in architectures ) {
     for( version in versions ) {
         tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
     }
-
-    // Append to the list
-    imageTags = imageTags + ' ' + tag[arch]
 
     // The build step for the architecture
     build[arch] = {
@@ -129,19 +123,26 @@ node( 'AMD64' ) {
             def multiImage  = repository + imagePrefix + ':' + version
 
             // Create the new image manifest with the child image layers attached
-            sh 'docker manifest create -a ' + multiImage + imageTags
+            def cmds = [ 'docker manifest create -a ' + multiImage ]
 
             for( architecture in architectures ) {
                 for( image in images[architecture] ) {
+                    // Append image name to manifest create command
+                    cmds[0] = cmds[0] + ' ' + image[0]
                     // Pull the image
-                    sh 'docker pull ' + image[0]
+                    cmds << 'docker pull ' + image[0]
                     // Annotate it to the correct architecture
-                    sh image[1]
+                    cmds << image[1]
                 }
             }
 
-            // Push the final multiarch image
-            sh 'docker manifest push -p ' + multiImage
+            // Push the image
+            cmds << 'docker manifest push -p ' + multiImage
+
+            // Run the command sequence
+            for( cmd in cmds ) {
+                sh cmd
+            }
         }
     }
 }
