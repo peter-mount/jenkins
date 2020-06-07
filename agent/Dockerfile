@@ -13,7 +13,7 @@ RUN apt-get update &&\
 
 USER jenkins
 ENV AGENT_WORKDIR=${JENKINS_HOME}/agent
-RUN mkdir -pv ${AGENT_WORKDIR} ${JENKINS_HOME}/.jenkins &&\
+RUN mkdir -pv ${AGENT_WORKDIR} ${JENKINS_HOME}/.jenkins
 WORKDIR ${JENKINS_HOME}
 
 FROM agent AS inbound
