@@ -67,7 +67,7 @@ def buildImage = {
                 sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' .'
             } else {
                 sh 'docker pull ' +tag[arch]['nowar']
-                sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg=version=' + version + ' .'
+                sh 'docker build -f ' + dockerfile + ' -t ' + tag[arch][version] + ' --build-arg version=' + version + ' .'
             }
 
             // Push only if required
