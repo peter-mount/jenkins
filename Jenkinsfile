@@ -124,23 +124,29 @@ def multiArch = {
 }
 
 // First the nowar image as it's needed for all other builds
+
 stage( 'Build nowar' ) {
     parallel buildVersion( 'common/Dockerfile', 'nowar' )
 }
+
 stage( 'Multiarch nowar' ) {
     multiArch( 'nowar' )
 }
 
 // Now build each version on each architecture then multi-arch them at the end
+
 def multi = [:]
-version.each( v -> {
-    // Force copy else multiArch closure won't see this value
-    def version = v
-    stage( 'Jenkins ' + version ) {
-        parallel buildVersion( 'jenkins/Dockerfile', version )
+version.each( {
+    v -> {
+        // Force copy else multiArch closure won't see this value
+        def version = v
+        stage( 'Jenkins ' + version ) {
+            parallel buildVersion( 'jenkins/Dockerfile', version )
+        }
+        multi['Jenkins ' + version] = { -> multiArch( version ) }
     }
-    multi['Jenkins ' + version] = { -> multiArch( version ) }
-}
+} )
+
 stage( 'Multiarch Jenkins' ) {
     parallel multi
 }
