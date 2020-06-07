@@ -20,12 +20,8 @@ ARG uid=1000
 ENV JENKINS_HOME /opt/jenkins
 ENV JENKINS_PORT 80
 
-# Startup script & logging template
-COPY docker-entrypoint.sh /
-COPY log.properties /
-
-RUN chmod 500 /docker-entrypoint.sh &&\
-    mkdir -p ${JENKINS_HOME} &&\
+RUN mkdir -p ${JENKINS_HOME} &&\
+    chown ${uid}:${gid} -R ${JENKINS_HOME} &&\
     addgroup --gid ${gid} jenkins &&\
     adduser --system \
             --home ${JENKINS_HOME} \
@@ -38,12 +34,30 @@ RUN chmod 500 /docker-entrypoint.sh &&\
 # Now run as the jenkins user
 USER jenkins
 
-ENTRYPOINT  ["/docker-entrypoint.sh"]
+# Now retrieve the war for the required version
+#
+# This build stage retrieves the appropriate war and the entry point
+# into /opt with appropriate permissions.
+#
+# It uses the base jdk image from the first stage to keep the final image clean
+#
+FROM jdk AS war
+ARG version
+COPY log.properties /deploy/
+COPY docker-entrypoint.sh /deploy/
+RUN URL="http://mirrors.jenkins-ci.org/war/${version}/jenkins.war" &&\
+    if [ "${version}" = "lts" ];\
+    then\
+        URL="http://mirrors.jenkins-ci.org/war-stable/latest/jenkins.war";\
+    fi &&\
+    curl -sSl -p /deploy/jenkins.war "${URL}" &&\
+    find /deploy -type f -exec chmod 644 {} \; &&\
+    chmod 500 /deploy/docker-entrypoint.sh \;
 
-# Final image with just the war added to /opt
+# Final image based on the jenkins build step with just the war added to /opt
 # Having this as a separate build step will allow us to generate versioned
 # builds with the same base image & just 1 layer being different - i.e.
 # older known-good jenkins versions with just the JDK updated
 FROM jenkins
-
-COPY jenkins.war /opt/jenkins.war
+COPY FROM war /deploy/ /opt/
+ENTRYPOINT  ["/opt/docker-entrypoint.sh"]

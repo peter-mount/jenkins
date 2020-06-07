@@ -29,18 +29,26 @@ architectures = [
  ['ARM32v7', 'arm32v7']
 ]
 
+// The jenkins versions to build, always latest and the LTD version & select other versions to allow a
+// rollback if latest breaks for any reason
+//
+// nowar    Special case, image only has the jenkins user setup, no war or entry point configured
+// latest   the current latest war
+// lts      the current lts war
+versions = [ 'nowar', 'latest', "lts", "2.238" ]
+
+// ============================
+// Do not edit below this point
+// ============================
+
 // The image tag (i.e. repository/image but no version)
 imageTag=repository + imagePrefix
 
-// The image version based on the branch name - master branch is latest in docker
-version=BRANCH_NAME
-if( version == 'master' ) {
-  version = 'latest'
-}
+// For jenkins instead of using the branch we use an array of supported version
+// numbers so we build a set of images for each version on all architectures
 
 // Final image name
-def multiImage  = repository + imagePrefix + ':' + version,
-    tag         =[:],   // tag name keyed by architecture
+def tag         =[:],   // tag name keyed by architecture
     build       = [:],  // build steps keyed by architecture
     imageTags   = '',   // list of image tags space separated
     images      = [:]   // map of annotate commands keyed by image name
@@ -51,7 +59,10 @@ for( architecture in architectures ) {
     def arch = architecture[1]
 
     // The docker image name for this architecture
-    tag[arch] = repository + imagePrefix + ':' + arch + '-' + version
+    tag[arch] = [:]
+    for( version in versions ) {
+        tag[arch][version] = repository + imagePrefix + ':' + arch + '-' + version
+    }
 
     // Append to the list
     imageTags = imageTags + ' ' + tag[arch]
@@ -62,13 +73,27 @@ for( architecture in architectures ) {
             stage( arch ) {
                 checkout scm
 
-                sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
+                //sh 'curl -sSL -o jenkins.war http://mirrors.jenkins-ci.org/war/latest/jenkins.war'
 
-                sh 'docker build -t ' + tag[arch] + ' .'
+                // Build up to the jenkins build stage as this is common to all versions
+                sh 'docker build -t ' + tag[arch] + ' --target jenkins .'
+
+                for( version in versions ) {
+                    def cmd = 'docker build -t ' + tag[arch][version]
+                    cmd = cmd + ' --build-arg=version=' + version
+                    if( version == 'nowar' ) {
+                        cmd = cmd + ' --target=jenkins'
+                    } else {
+                        cmd = cmd + ' --target=war'
+                    }
+                    sh cmd + ' .'
+                }
 
                 // Push only if required
                 if( repository != '' ) {
-                    sh 'docker push ' + tag[arch]
+                    for( version in versions ) {
+                        sh 'docker push ' + tag[arch][version]
+                    }
                 }
             }
         }
@@ -88,7 +113,10 @@ for( architecture in architectures ) {
         default:
             cmd = cmd + '--arch ' + arch
     }
-    images[tag[arch]] = cmd + ' ' + multiImage + ' ' + tag[arch]
+    images[arch] = [:]
+    for( version in versions ) {
+        images[arch][version] = cmd + ' ' + multiImage + ' ' + tag[arch][version]
+    }
 }
 
 // Now run the builds for all architectures in parallel
@@ -96,20 +124,26 @@ stage( 'Build' ) {
     parallel build
 }
 
-// Now the multiarch image, run this on one node only
+// Now the multi-arch image, run this on one node only
 node( 'AMD64' ) {
-    stage( "Multiarch" ) {
-        // Create the new image manifest with the child image layers attached
-        sh 'docker manifest create -a ' + multiImage + imageTags
+    for( version in versions ) {
+        stage( "Multi-" + version ) {
+            def multiImage  = repository + imagePrefix + ':' + version
 
-        for( image in images ) {
-            // Pull the image
-            sh 'docker pull ' + image[0]
-            // Annotate it to the correct architecture
-            sh image[1]
+            // Create the new image manifest with the child image layers attached
+            sh 'docker manifest create -a ' + multiImage + imageTags
+
+            for( architecture in architectures ) {
+                for( image in images[architecture] ) {
+                    // Pull the image
+                    sh 'docker pull ' + image[0]
+                    // Annotate it to the correct architecture
+                    sh image[1]
+                }
+            }
+
+            // Push the final multiarch image
+            sh 'docker manifest push -p ' + multiImage
         }
-
-        // Push the final multiarch image
-        sh 'docker manifest push -p ' + multiImage
     }
 }
