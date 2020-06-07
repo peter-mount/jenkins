@@ -33,6 +33,7 @@ architectures = [
 // rollback if latest breaks for any reason.
 //
 // Note: The nowar version is always built first so no need to include it here.
+// Also agent is custom and independent of this
 //
 // latest is always the current latest war, lts the current lts war
 //
@@ -127,6 +128,15 @@ stage( 'Build nowar' ) {
 
 stage( 'Multiarch nowar' ) {
     multiArch( 'nowar' )
+}
+
+// Now the agent
+stage( 'Build agent' ) {
+    parallel buildVersion( 'agent/Dockerfile', 'agent' )
+}
+
+stage( 'Multiarch agent' ) {
+    multiArch( 'agent' )
 }
 
 // Now build each version on each architecture then multi-arch them at the end
