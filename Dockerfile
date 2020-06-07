@@ -1,13 +1,15 @@
 # Docker file to build the jenkins container used by the Area51 project
 
-FROM adoptopenjdk/openjdk8:alpine-slim AS jdk
+FROM adoptopenjdk/openjdk8:debian-slim AS jdk
 MAINTAINER Peter Mount <peter@area51.dev>
 
 # Add the common source control apps
-RUN apk add --no-cache \
+RUN apt-get update &&\
+    apt-get install -y --no-install-recommends \
         git \
         mercurial \
-        subversion
+        subversion &&\
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Now add the jenkins user & startup script
 FROM jdk AS jenkins
