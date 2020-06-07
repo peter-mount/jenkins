@@ -11,7 +11,7 @@ COPY retrieve-jenkins.sh /bin/
 RUN retrieve-jenkins.sh ${version} /deploy/jenkins-deploy/jenkins.war &&\
     chown -R jenkins:jenkins /deploy &&\
     find /deploy -type f -exec chmod 644 {} \; &&\
-    chmod 555 /deploy/docker-entrypoint.sh
+    chmod 555 /deploy/jenkins-deploy/docker-entrypoint.sh
 
 # Final image based on the jenkins build step with just the war added to /opt
 # Having this as a separate build step will allow us to generate versioned
