@@ -46,7 +46,7 @@ versions = [ 'latest', "lts", "2.238" ]
 // numbers so we build a set of images for each version on all architectures
 
 // map of image names. Always tag[arch][version]
-def tag = [:]
+def tag = architectures.inject([:]) { a, b -> a[b[1]]=[:] }
 
 // Build a specific image on a specific architecture
 def buildImage = {
