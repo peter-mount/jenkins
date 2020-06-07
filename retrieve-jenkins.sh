@@ -14,4 +14,4 @@ fi
 
 path=${dir}/${version}/jenkins.war
 echo "Retrieving ${path} -> ${dest}"
-curl -sSl -o $dest http://mirrors.jenkins-ci.org/${path}
+curl -sSl --remote-time -o $dest http://mirrors.jenkins-ci.org/${path}
