@@ -30,7 +30,8 @@ COPY --from=client /tmp/docker /usr/local/docker
 
 RUN chmod +x /usr/local/bin/jenkins-agent &&\
     ln -s /usr/local/bin/jenkins-agent /usr/local/bin/jenkins-slave &&\
-    ln -s /usr/local/docker/docker /usr/bin/docker
+    ln -s /usr/local/docker/docker /usr/bin/docker &&\
+    echo "docker:x:998:jenkins" >>/etc/group
 
 USER jenkins
 
