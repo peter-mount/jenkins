@@ -19,7 +19,7 @@ FROM agent AS client
 
 RUN cd /tmp &&\
     uname -m &&\
-    curl -sSL -O https://download.docker.com/linux/static/stable/$(uname -m)/docker-19.03.12.tgz &&\
+    curl -sSL -O $(./agent/get-docker.sh) &&\
     tar xzf docker-19.03.12.tgz
 
 FROM agent AS inbound
