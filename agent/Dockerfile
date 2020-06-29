@@ -17,9 +17,11 @@ WORKDIR ${JENKINS_HOME}
 
 FROM agent AS client
 
+COPY agent/get-docker.sh /tmp
+
 RUN cd /tmp &&\
     uname -m &&\
-    curl -sSL -O $(./agent/get-docker.sh) &&\
+    curl -sSL -O $(/tmp/get-docker.sh) &&\
     tar xzf docker-19.03.12.tgz
 
 FROM agent AS inbound
