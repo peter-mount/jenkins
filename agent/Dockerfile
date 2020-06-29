@@ -19,19 +19,17 @@ WORKDIR ${JENKINS_HOME}
 FROM agent AS client
 
 RUN cd /tmp &&\
-    curl -sSL -O https://master.dockerproject.org/linux/x86_64/docker.tgz &&\
-    tar xzf docker.tgz
+    curl -sSL -O https://download.docker.com/linux/static/stable/$(uname -m)/docker-19.03.12.tgz &&\
+    tar xzf docker-19.03.12.tgz
 
 FROM agent AS inbound
 
 USER root
 COPY agent/jenkins-agent.sh /usr/local/bin/jenkins-agent
-COPY --from=client /tmp/docker /usr/local/docker
+COPY --from=client /tmp/docker/docker /usr/bin/docker
 
 RUN chmod +x /usr/local/bin/jenkins-agent &&\
-    ln -s /usr/local/bin/jenkins-agent /usr/local/bin/jenkins-slave &&\
-    ln -s /usr/local/docker/docker /usr/bin/docker &&\
-    echo "docker:x:998:jenkins" >>/etc/group
+    ln -s /usr/local/bin/jenkins-agent /usr/local/bin/jenkins-slave
 
 USER jenkins
 
