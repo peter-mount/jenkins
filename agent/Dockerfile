@@ -1,12 +1,11 @@
 # A docker slave based on docker-inbound-agent
 FROM area51/jenkins:nowar AS agent
-ARG VERSION=4.3
 
 USER root
 RUN apt-get update &&\
     apt-get install git-lfs &&\
     rm -rf /var/lib/apt/lists/* &&\
-    curl --create-dirs -fsSLo /usr/share/jenkins/agent.jar https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/${VERSION}/remoting-${VERSION}.jar &&\
+    curl --create-dirs -fsSLo /usr/share/jenkins/agent.jar https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/4.3/remoting-4.3.jar &&\
     chmod 755 /usr/share/jenkins &&\
     chmod 644 /usr/share/jenkins/agent.jar &&\
     ln -sf /usr/share/jenkins/agent.jar /usr/share/jenkins/slave.jar
