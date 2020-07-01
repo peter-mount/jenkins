@@ -25,8 +25,8 @@ imagePrefix = 'jenkins'
 // The architectures to build. This is an array of [label,arch, annotation]
 architectures = [
     ['AMD64',      'amd64',    '--os linux --arch amd64'],
-    ['ARM64',      'arm64v8',  '--os linux --arch arm64'],
-    ['ARM32v7',    'arm32v7',  '--os linux --arch arm --variant v7']
+    ['ARM64',      'arm64v8',  '--os linux --arch arm64']//,
+    //['ARM32v7',    'arm32v7',  '--os linux --arch arm --variant v7']
 ]
 
 // The jenkins versions to build, always latest and the LTD version & select other versions to allow a
