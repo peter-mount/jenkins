@@ -37,7 +37,7 @@ architectures = [
 //
 // latest is always the current latest war, lts the current lts war
 //
-versions = [ 'latest', "lts", "2.238" ]
+versions = [ 'latest', "lts" ]
 
 // ============================
 // Do not edit below this point
